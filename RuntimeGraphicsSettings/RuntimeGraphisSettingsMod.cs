@@ -3,13 +3,13 @@ using RuntimeGraphicsSettings;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-[assembly:MelonInfo(typeof(RuntimeGraphicsSettingsMod), "Runtime Graphics Settings", RuntimeGraphicsSettingsMod.ModVersion, "knah", "https://github.com/knah/VRCMods")]
+[assembly:MelonInfo(typeof(RuntimeGraphicsSettingsMod), "Runtime Graphics Settings", RuntimeGraphicsSettingsMod.ModVersion, "knah", "https://github.com/knah/ML-UniversalMods")]
 [assembly:MelonGame] // universal
 namespace RuntimeGraphicsSettings
 {
     public class RuntimeGraphicsSettingsMod : MelonMod
     {
-        public const string ModVersion = "0.2.0";
+        public const string ModVersion = "0.2.1";
         
         public override void OnApplicationStart()
         {

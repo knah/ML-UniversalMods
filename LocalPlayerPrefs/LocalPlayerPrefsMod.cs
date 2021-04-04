@@ -10,7 +10,7 @@ using MelonLoader.TinyJSON;
 using UnhollowerBaseLib;
 using UnityEngine;
 
-[assembly:MelonInfo(typeof(LocalPlayerPrefsMod), "LocalPlayerPrefs", "1.0.0", "knah", "https://github.com/knah/VRCMods")]
+[assembly:MelonInfo(typeof(LocalPlayerPrefsMod), "LocalPlayerPrefs", "1.0.1", "knah", "https://github.com/knah/ML-UniversalMods")]
 [assembly:MelonGame]
 
 namespace LocalPlayerPrefs

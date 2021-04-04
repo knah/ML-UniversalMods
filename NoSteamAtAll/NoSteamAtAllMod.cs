@@ -5,7 +5,7 @@ using MelonLoader;
 using NoSteamAtAll;
 
 [assembly:MelonGame]
-[assembly:MelonInfo(typeof(NoSteamAtAllMod), "No Steam. At all.", "1.0.1", "knah")]
+[assembly:MelonInfo(typeof(NoSteamAtAllMod), "No Steam. At all.", "1.0.2", "knah")]
 
 namespace NoSteamAtAll
 {
@@ -19,7 +19,7 @@ namespace NoSteamAtAll
 
         public override void OnApplicationStart()
         {
-            var library = LoadLibrary(MelonUtils.GameDirectory + "\\Plugins\\steam_api64.dll");
+            var library = LoadLibrary(MelonUtils.GetGameDataDirectory() + "\\Plugins\\steam_api64.dll");
             if (library == IntPtr.Zero)
             {
                 MelonLogger.LogError("Library load failed");

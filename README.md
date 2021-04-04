@@ -1,5 +1,5 @@
 This repository contains my mods for MelonLoader. Join the [MelonLoader discord](https://discord.gg/2Wn3N2P) for support and more mods!  
-Looking for my VRChat mods? [Look here!](https://github.com/knah/VRCMods)
+Looking for my VRChat mods? [Look here!](https://github.com/knah/ML-UniversalMods)
 
 ## Known limitations
 All of these mods were compiled against IL2CPP generated assemblies for Unity 2018.4.20. This means they might have compatibility issues with other Unity versions and non-IL2CPP games.
