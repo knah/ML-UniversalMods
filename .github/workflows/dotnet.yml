@@ -1,0 +1,39 @@
+name: .NET
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Checkout libs
+      uses: actions/checkout@v2
+      with:
+        repository: ${{ secrets.LibsRepository }}
+        token: ${{ secrets.LibsRepositoryToken }}
+        path: Libs
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+      
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build
+      run: dotnet build --no-restore
+      
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: Compiled DLLs
+        path: Output/Debug/net472/*.dll
