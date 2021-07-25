@@ -10,7 +10,7 @@ using MelonLoader.TinyJSON;
 using UnhollowerBaseLib;
 using UnityEngine;
 
-[assembly:MelonInfo(typeof(LocalPlayerPrefsMod), "LocalPlayerPrefs", "1.0.1", "knah", "https://github.com/knah/ML-UniversalMods")]
+[assembly:MelonInfo(typeof(LocalPlayerPrefsMod), "LocalPlayerPrefs", "1.0.2", "knah", "https://github.com/knah/ML-UniversalMods")]
 [assembly:MelonGame]
 
 namespace LocalPlayerPrefs
@@ -22,7 +22,7 @@ namespace LocalPlayerPrefs
         private readonly List<Delegate> myPinnedDelegates = new List<Delegate>();
         private readonly ConcurrentDictionary<string, object> myPrefs = new ConcurrentDictionary<string, object>();
 
-        private bool myHadChanges = false;
+        private bool myHadChanges;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate bool TrySetFloatDelegate(IntPtr keyPtr, float value);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate bool TrySetIntDelegate(IntPtr keyPtr, int value);
@@ -45,12 +45,12 @@ namespace LocalPlayerPrefs
                 {
                     var dict = (ProxyObject) JSON.Load(File.ReadAllText(FileName));
                     foreach (var keyValuePair in dict) myPrefs[keyValuePair.Key] = ToObject(keyValuePair.Key, keyValuePair.Value);
-                    MelonLogger.Log($"Loaded {dict.Count} prefs from PlayerPrefs.json");
+                    MelonLogger.Msg($"Loaded {dict.Count} prefs from PlayerPrefs.json");
                 }
             }
             catch (Exception ex)
             {
-                MelonLogger.LogError($"Unable to load PlayerPrefs.json: {ex}");
+                MelonLogger.Error($"Unable to load PlayerPrefs.json: {ex}");
             }
 
             HookICall<TrySetFloatDelegate>(nameof(PlayerPrefs.TrySetFloat), TrySetFloat);
@@ -73,7 +73,7 @@ namespace LocalPlayerPrefs
             if (value is null) return null;
             
             if (value is ProxyString proxyString)
-                return proxyString.ToString();
+                return proxyString.ToString(CultureInfo.InvariantCulture);
             
             if (value is ProxyNumber number)
             {
@@ -87,16 +87,16 @@ namespace LocalPlayerPrefs
             throw new ArgumentException($"Unknown value in prefs: {key} = {value?.GetType()} / {value}");
         }
 
-        public override void OnLevelWasLoaded(int level)
+        public override void OnSceneWasLoaded(int buildIndex, string name)
         {
             Save();
-            MelonLogger.Log("Saved PlayerPrefs.json on level load");
+            MelonLogger.Msg("Saved PlayerPrefs.json on level load");
         }
 
         public override void OnApplicationQuit()
         {
             Save();
-            MelonLogger.Log("Saved PlayerPrefs.json on exit");
+            MelonLogger.Msg("Saved PlayerPrefs.json on exit");
         }
 
         private bool HasKey(IntPtr keyPtr)
@@ -133,7 +133,7 @@ namespace LocalPlayerPrefs
             }
             catch (IOException ex)
             {
-                MelonLogger.LogWarning($"Exception while saving PlayerPrefs: {ex}");
+                MelonLogger.Warning($"Exception while saving PlayerPrefs: {ex}");
             }
         }
 
@@ -215,12 +215,12 @@ namespace LocalPlayerPrefs
             var originalPointer = IL2CPP.il2cpp_resolve_icall("UnityEngine.PlayerPrefs::" + name);
             if (originalPointer == IntPtr.Zero)
             {
-                MelonLogger.LogWarning($"ICall {name} was not found, not patching");
+                MelonLogger.Warning($"ICall {name} was not found, not patching");
                 return;
             }
             
             myPinnedDelegates.Add(target);
-            Imports.Hook((IntPtr) (&originalPointer), Marshal.GetFunctionPointerForDelegate(target));
+            MelonUtils.NativeHookAttach((IntPtr) (&originalPointer), Marshal.GetFunctionPointerForDelegate(target));
         }
     }
 }

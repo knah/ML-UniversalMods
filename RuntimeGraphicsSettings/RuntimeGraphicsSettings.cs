@@ -1,45 +1,75 @@
 using MelonLoader;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace RuntimeGraphicsSettings
 {
     public static class RuntimeGraphicsSettings
     {
-        private const string CategoryName = "GraphicsSettings";
-        private const string MsaaLevel = "MSAALevel";
-        private const string AllowMsaa = "AllowMSAA";
-        private const string AnisoFilter = "AnisotropicFiltering";
-        private const string RealtimeShadows = "RealtimeShadows";
-        private const string SoftShadows = "SoftShadows";
-        private const string PixelLights = "PixelLights";
-        private const string TextureLimit = "MasterTextureLimit";
-        private const string GraphicsTier = "GraphicsTier";
-
         public static void RegisterSettings()
         {
-            MelonPrefs.RegisterCategory(CategoryName, "Graphics settings");
+            var category = MelonPreferences.CreateCategory("GraphicsSettings", "Graphics settings");
+
+            var msaaLevel = category.CreateEntry("MSAALevel", -1, "MSAA Level (1/2/4/8)");
+            var allowMsaa = category.CreateEntry("AllowMSAA", true, "Enable MSAA");
+            var anisoFilter = category.CreateEntry("AnisotropicFiltering", true, "Enable anisotropic filtering");
+            var rtShadows = category.CreateEntry("RealtimeShadows", true, "Realtime shadows");
+            var softShadows = category.CreateEntry("SoftShadows", true, "Soft shadows");
+            var maxPixelLights = category.CreateEntry("PixelLights", -1, "Max pixel lights");
+            var textureDecimation = category.CreateEntry("MasterTextureLimit", -1, "Texture decimation");
+            var graphicsTier = category.CreateEntry("GraphicsTier", -1, "Graphics tier (1/2/3)");
+
+
+            anisoFilter.OnValueChanged += (_, value) =>
+            {
+                QualitySettings.anisotropicFiltering = value ? AnisotropicFiltering.ForceEnable : AnisotropicFiltering.Disable;
+            };
+            QualitySettings.anisotropicFiltering = anisoFilter.Value ? AnisotropicFiltering.ForceEnable : AnisotropicFiltering.Disable;
+
+            textureDecimation.OnValueChanged += (_, value) =>
+            {
+                if (value >= 0) QualitySettings.masterTextureLimit = value;
+            };
+            if (textureDecimation.Value >= 0) QualitySettings.masterTextureLimit = textureDecimation.Value;
+
+            maxPixelLights.OnValueChanged += (_, value) =>
+            {
+                if (value >= 0) QualitySettings.pixelLightCount = value;
+            };
+            if (maxPixelLights.Value >= 0) QualitySettings.pixelLightCount = maxPixelLights.Value;
+
+            graphicsTier.OnValueChanged += (_, value) =>
+            {
+                if (value > 0) Graphics.activeTier = (GraphicsTier)(value - 1);
+            };
+            if (graphicsTier.Value > 0) Graphics.activeTier = (GraphicsTier)(graphicsTier.Value - 1);
+
+            void UpdateShadows()
+            {
+                QualitySettings.shadows = rtShadows.Value
+                    ? softShadows.Value ? ShadowQuality.All : ShadowQuality.HardOnly
+                    : ShadowQuality.Disable;
+            }
             
-            MelonPrefs.RegisterInt(CategoryName, MsaaLevel, -1, "MSAA Level (1/2/4/8)");
-            MelonPrefs.RegisterBool(CategoryName, AllowMsaa, true, "Enable MSAA");
-            MelonPrefs.RegisterBool(CategoryName, AnisoFilter, true, "Enable anisotropic filtering");
-            MelonPrefs.RegisterBool(CategoryName, RealtimeShadows, true, "Realtime shadows");
-            MelonPrefs.RegisterBool(CategoryName, SoftShadows, true, "Soft shadows");
-            MelonPrefs.RegisterInt(CategoryName, PixelLights, -1, "Max pixel lights");
-            MelonPrefs.RegisterInt(CategoryName, TextureLimit, -1, "Texture decimation");
-            MelonPrefs.RegisterInt(CategoryName, GraphicsTier, -1, "Graphics tier (1/2/3)");
+            UpdateShadows();
+
+            rtShadows.OnValueChangedUntyped += UpdateShadows;
+            softShadows.OnValueChangedUntyped += UpdateShadows;
+
+            void UpdateMsaa()
+            {
+                if (allowMsaa.Value)
+                {
+                    if (msaaLevel.Value > 0)
+                        QualitySettings.antiAliasing = msaaLevel.Value;
+                }
+                else
+                    QualitySettings.antiAliasing = 1;
+            }
+
+            msaaLevel.OnValueChangedUntyped += UpdateMsaa;
+            allowMsaa.OnValueChangedUntyped += UpdateMsaa;
+            UpdateMsaa();
         }
-
-        public static bool AllowMSAA => MelonPrefs.GetBool(CategoryName, AllowMsaa);
-        public static int MSAALevel => MelonPrefs.GetInt(CategoryName, MsaaLevel);
-        public static bool AllowAniso => MelonPrefs.GetBool(CategoryName, AnisoFilter);
-
-        public static ShadowQuality ShadowQuality => MelonPrefs.GetBool(CategoryName, RealtimeShadows)
-            ? (MelonPrefs.GetBool(CategoryName, SoftShadows) ? ShadowQuality.All : ShadowQuality.HardOnly)
-            : ShadowQuality.Disable;
-
-        public static int PixelLightCount => MelonPrefs.GetInt(CategoryName, PixelLights);
-        public static int TextureSizeLimit => MelonPrefs.GetInt(CategoryName, TextureLimit);
-        public static int HardwareGraphicsTier => MelonPrefs.GetInt(CategoryName, GraphicsTier);
-        
     }
 }

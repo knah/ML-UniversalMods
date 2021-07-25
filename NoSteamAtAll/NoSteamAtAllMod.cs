@@ -1,11 +1,12 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.InteropServices;
-using Harmony;
+using HarmonyLib;
 using MelonLoader;
 using NoSteamAtAll;
 
 [assembly:MelonGame]
-[assembly:MelonInfo(typeof(NoSteamAtAllMod), "No Steam. At all.", "1.0.2", "knah")]
+[assembly:MelonInfo(typeof(NoSteamAtAllMod), "No Steam. At all.", "1.0.3", "knah")]
 
 namespace NoSteamAtAll
 {
@@ -19,10 +20,13 @@ namespace NoSteamAtAll
 
         public override void OnApplicationStart()
         {
-            var library = LoadLibrary(MelonUtils.GetGameDataDirectory() + "\\Plugins\\steam_api64.dll");
+            var path = MelonUtils.GetGameDataDirectory() + "\\Plugins\\steam_api64.dll";
+            if (!File.Exists(path)) path = MelonUtils.GetGameDataDirectory() + "\\Plugins\\x86_64\\steam_api64.dll";
+            if (!File.Exists(path)) path = MelonUtils.GetGameDataDirectory() + "\\Plugins\\x86\\steam_api64.dll";
+            var library = LoadLibrary(path);
             if (library == IntPtr.Zero)
             {
-                MelonLogger.LogError("Library load failed");
+                MelonLogger.Error($"Library load failed; used path: {path}");
                 return;
             }
             var names = new[]
@@ -43,10 +47,10 @@ namespace NoSteamAtAll
                     var address = GetProcAddress(library, name);
                     if (address == IntPtr.Zero)
                     {
-                        MelonLogger.LogError($"Procedure {name} not found");
+                        MelonLogger.Error($"Procedure {name} not found");
                         continue;
                     }
-                    Imports.Hook((IntPtr) (&address),
+                    MelonUtils.NativeHookAttach((IntPtr) (&address),
                         AccessTools.Method(typeof(NoSteamAtAllMod), nameof(InitFail)).MethodHandle
                             .GetFunctionPointer());
                 }
