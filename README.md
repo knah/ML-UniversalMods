@@ -13,8 +13,10 @@ You should experiment with settings in a CPU-heavy world or scene to measure per
 This mod is Windows-only. It likely won't do anything on Intel CPUs, but you're free to experiment with it.
 
 Settings:
-* Max Cores (default 4) - the maximum amount of cores that the game may use. 4 is the sweet spot on a 2700X/3700X.
-* Skip Hyperthreads (default true) - don't assign game to both threads of one core. Works best when enabled on 2700X/3700X.
+* Max Cores (default half the physical cores you have) - the maximum amount of cores that the game may use. 4 is the sweet spot on a 2700X/3700X.
+* Use both hyperthreads - will use both hyperthreads on cores if enabled (otherwise just one)
+* Use first X cores (instead of last) - will use CPU cores starting from first one instead of last one
+* Use specific cores - allows you to specify a comma-separated list of cores (including hyperthreads). Cores are numbered starting from zero, and each hyperthread gets a number, so for a 8-core CPU valid values here would range from 0 to 15. 
 
 
 ## HWIDPatch
