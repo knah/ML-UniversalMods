@@ -17,7 +17,7 @@ namespace LocalPlayerPrefs
 {
     public class LocalPlayerPrefsMod : MelonMod
     {
-        private const string FileName = "UserData/PlayerPrefs.json";
+        private string fileName = "UserData/PlayerPrefs.json";
         
         private readonly List<Delegate> myPinnedDelegates = new List<Delegate>();
         private readonly ConcurrentDictionary<string, object> myPrefs = new ConcurrentDictionary<string, object>();
@@ -39,18 +39,25 @@ namespace LocalPlayerPrefs
         
         public override void OnApplicationStart()
         {
+            foreach (string arg in Environment.GetCommandLineArgs())
+            {
+                if (arg.StartsWith("--localplayerprefs="))
+                {
+                    fileName = arg.Split(new char[] { '=' }, 2)[1];
+                }
+            }
             try
             {
-                if (File.Exists(FileName))
+                if (File.Exists(fileName))
                 {
-                    var dict = (ProxyObject) JSON.Load(File.ReadAllText(FileName));
+                    var dict = (ProxyObject) JSON.Load(File.ReadAllText(fileName));
                     foreach (var keyValuePair in dict) myPrefs[keyValuePair.Key] = ToObject(keyValuePair.Key, keyValuePair.Value);
-                    MelonLogger.Msg($"Loaded {dict.Count} prefs from PlayerPrefs.json");
+                    MelonLogger.Msg($"Loaded {dict.Count} prefs from {fileName}");
                 }
             }
             catch (Exception ex)
             {
-                MelonLogger.Error($"Unable to load PlayerPrefs.json: {ex}");
+                MelonLogger.Error($"Unable to load {fileName}: {ex}");
             }
 
             HookICall<TrySetFloatDelegate>(nameof(PlayerPrefs.TrySetFloat), TrySetFloat);
@@ -90,13 +97,13 @@ namespace LocalPlayerPrefs
         public override void OnSceneWasLoaded(int buildIndex, string name)
         {
             Save();
-            MelonLogger.Msg("Saved PlayerPrefs.json on level load");
+            MelonLogger.Msg($"Saved {fileName} on level load");
         }
 
         public override void OnApplicationQuit()
         {
             Save();
-            MelonLogger.Msg("Saved PlayerPrefs.json on exit");
+            MelonLogger.Msg($"Saved {fileName} on exit");
         }
 
         private bool HasKey(IntPtr keyPtr)
@@ -128,7 +135,7 @@ namespace LocalPlayerPrefs
             {
                 lock (mySaveLock)
                 {
-                    File.WriteAllText(FileName, JSON.Dump(myPrefs, EncodeOptions.PrettyPrint));
+                    File.WriteAllText(fileName, JSON.Dump(myPrefs, EncodeOptions.PrettyPrint));
                 }
             }
             catch (IOException ex)
